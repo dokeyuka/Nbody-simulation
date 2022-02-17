@@ -21,7 +21,7 @@
 #define TY -1.1   /* y coordinate of time */
 #define CFG 5     /* foreground color */
 #define CBG 0     /* background color */
-
+/**/
 /* the prototype declaration */
 void make_spherical_df(int n, double m[], double x[][3], double v[][3], double r_v, double eps2);
 void calc_force(int n, double m[], double x[][3], double a[][3], double eps2);
