@@ -42,11 +42,10 @@ void open_window(FILE **gp)
     exit(EXIT_FAILURE);
   }
   fprintf(*gp, "set size square\n");
-  // fprintf(*gp, "set terminal gif animate\n");
-  // fprintf(*gp, "set output \"plot.gif\"\n");
+  //fprintf(*gp, "set terminal gif animate\n");
+  //fprintf(*gp, "set output \"plot.gif\"\n");
   fprintf(*gp, "set xrange [-%f:%f]\n", VMAX, VMAX);
   fprintf(*gp, "set yrange [-%f:%f]\n", VMAX, VMAX);
-
 }
 
 void close_window(FILE **gp)
@@ -60,7 +59,7 @@ void animated_snapshot(int n, double t, double x[][3], FILE **gp)
 
   int i;
   fprintf(*gp, "set key title \"%f\"\n", t);
-  fprintf(*gp, "plot '-' with points pointtype 0 notitle\n");
+  fprintf(*gp, "plot '-' with points pointtype 0 lc rgb '#ff1493' notitle\n");
   for (i = 0; i <= n; i++)
   {
     fprintf(*gp, "%f\t%f\n", x[i][0], x[i][1]);
@@ -86,7 +85,6 @@ double gaussian(void)
 
   return (z);
 }
-
 
 /**********************************************************************
  make_spherical_df :
@@ -140,7 +138,6 @@ void make_spherical_df(int n, double m[], double x[][3], double v[][3], double r
     {
       v[i][k] = sigma * gaussian();
     }
-
   }
 }
 
@@ -150,28 +147,33 @@ calc_force :
   arg value    : n, m, x, a, eps2
   return vlaue :
 ***********************************************************************/
-void calc_force(int n, double m[], double x[][3], double a[][3], double eps2){
+void calc_force(int n, double m[], double x[][3], double a[][3], double eps2)
+{
 
   /*initialization of accelration*/
-  for (int i = 0; i < n; i++){
-    for (int k = 0; k < 3; k++){
+  for (int i = 0; i < n; i++)
+  {
+    for (int k = 0; k < 3; k++)
+    {
       a[i][k] = 0.0;
     }
   }
 
-  for(int i = 0; i < n - 1; i++){
-    for (int j = i + 1; j < n; j++){
+  for (int i = 0; i < n - 1; i++)
+  {
+    for (int j = i + 1; j < n; j++)
+    {
       double r[3];
-      r[0] = x[j][0] - x[i][0];  /* x */
-      r[1] = x[j][1] - x[i][1];  /* y */
-      r[2] = x[j][2] - x[i][2];  /* z */
-      double abs_r = sqrt(r[0]*r[0] + r[1]*r[1] + r[2]*r[2] + eps2);
-      double r3inv = 1.0 / (abs_r*abs_r*abs_r);
+      r[0] = x[j][0] - x[i][0]; /* x */
+      r[1] = x[j][1] - x[i][1]; /* y */
+      r[2] = x[j][2] - x[i][2]; /* z */
+      double abs_r = sqrt(r[0] * r[0] + r[1] * r[1] + r[2] * r[2] + eps2);
+      double r3inv = 1.0 / (abs_r * abs_r * abs_r);
 
       for (int k = 0; k < 3; k++)
       {
         a[i][k] += m[j] * r[k] * r3inv;
-        a[j][k] += - m[j] * r[k] * r3inv;
+        a[j][k] += -m[j] * r[k] * r3inv;
       }
     }
   }
@@ -187,8 +189,10 @@ void leap_frog(int n, double m[], double x[][3], double v[][3], double a[][3], d
 {
   double v_half[n][3];
 
-  for (int i = 0; i < n; i++){
-    for (int k = 0; k < 3; k++){
+  for (int i = 0; i < n; i++)
+  {
+    for (int k = 0; k < 3; k++)
+    {
       v_half[i][k] = v[i][k] + 0.5 * a[i][k] * dt;
       x[i][k] += v_half[i][k] * dt;
     }
@@ -196,27 +200,34 @@ void leap_frog(int n, double m[], double x[][3], double v[][3], double a[][3], d
 
   calc_force(n, m, x, a, eps2);
 
-  for (int i = 0; i < n; i++){
-    for (int k = 0; k < 3; k++){
+  for (int i = 0; i < n; i++)
+  {
+    for (int k = 0; k < 3; k++)
+    {
       v[i][k] = v_half[i][k] + 0.5 * a[i][k] * dt;
     }
   }
 }
 
-double calc_kinetic_energy(int n, double m[], double v[][3]){
+double calc_kinetic_energy(int n, double m[], double v[][3])
+{
   /*K : kinetic energy*/
   double K = 0.0;
-  for (int i = 0; i < n; i++){
+  for (int i = 0; i < n; i++)
+  {
     K += m[i] * (SQR(v[i][0]) + SQR(v[i][1]) + SQR(v[i][2])) / 2.0;
   }
   return K;
 }
 
-double calc_potential_energy(int n, double m[], double x[][3], double eps2){
+double calc_potential_energy(int n, double m[], double x[][3], double eps2)
+{
   double W = 0.0;
   /*W : potential energy*/
-  for (int i = 0; i < n - 1; i++){
-    for (int j = i + 1; j < n; j++){
+  for (int i = 0; i < n - 1; i++)
+  {
+    for (int j = i + 1; j < n; j++)
+    {
       double r2 = SQR(x[j][0] - x[i][0]) + SQR(x[j][1] - x[i][1]) + SQR(x[j][2] - x[i][2]);
       W = W - m[i] * m[j] / sqrt(r2 + eps2);
     }
@@ -224,13 +235,14 @@ double calc_potential_energy(int n, double m[], double x[][3], double eps2){
 
   return W;
 }
-    /**********************************************************************
-    calc_energy :
-      function to calculate kinematic and potential energy
-      arg value    : n, m, x, v, eps2
-      return value :
-    ***********************************************************************/
-double calc_energy(int n, double m[], double x[][3], double v[][3], double eps2){
+/**********************************************************************
+calc_energy :
+  function to calculate kinematic and potential energy
+  arg value    : n, m, x, v, eps2
+  return value :
+***********************************************************************/
+double calc_energy(int n, double m[], double x[][3], double v[][3], double eps2)
+{
   double K;
   double W;
   double E;
@@ -248,22 +260,22 @@ calc_r_v :
   arg value    : n, m, x, v, eps2
   return value :
 ***********************************************************************/
-double calc_r_v(int n, double m[], double x[][3], double v[][3], double eps2){
+double calc_r_v(int n, double m[], double x[][3], double v[][3], double eps2)
+{
   double K, W, rv;
 
   K = calc_kinetic_energy(n, m, v);
   W = calc_potential_energy(n, m, x, eps2);
 
-  rv = K/fabs(W);
+  rv = K / fabs(W);
   return rv;
 }
 
-
-
-void calc_force_on_gpu(int n, double m[], double x[][3], double a[][3], double pot[], double eps2){
+void calc_force_on_gpu(int n, double m[], double x[][3], double a[][3], double pot[], double eps2)
+{
 
   g5_open();
-  g5_st_range(-256.0, 256.0, m[0]);
+  g5_set_range(-256.0, 256.0, m[0]);
 
   g5_set_jp(0, n, m, x);
   g5_set_eps2_to_all(eps2);
@@ -282,7 +294,7 @@ int main(void)
   /* number of particles */
   int n;
   /* particle data */
-  static double m[NMAX], x[NMAX][3], v[NMAX][3], a[NMAX][3];
+  static double m[NMAX], x[NMAX][3], v[NMAX][3], a[NMAX][3], pot[NMAX];
   /* system energy, Virtual ratio */
   double e, e_ini, r_v, rv;
   /* current time, tmestep, end time, data interval */
@@ -299,8 +311,6 @@ int main(void)
 
   fprintf(stderr, "enter values of (eps k(index of dt) t_end t_out N r_v). eps must be about 1/100*phisycal system. dt must be lower than eps/v & 2^k\n");
   scanf("%lf %d %lf %lf %d %lf", &eps, &k, &t_end, &t_out, &n, &r_v);
-
-
 
   /*visualization for check */
   /*eps = 0.03125;
@@ -320,7 +330,6 @@ int main(void)
   }
   eps2 = SQR(eps);
 
-
   /*for check*/
   fprintf(stderr, "eps2 = %g\n dt = %g\n t_end = %g\n t_out = %g\n n = %d\n r_v= %g\n m = %g\n", eps2, dt, t_end, t_out, n, r_v, m[0]);
 
@@ -337,16 +346,18 @@ int main(void)
   /* caluculate initial energy */
   e_ini = calc_energy(n, m, x, v, eps2);
   /* calculate initial acceralation */
-  g5_open();
-  calc_force_on_gpu(n, m, x, a, eps2);
-  g5_close();
+
+  calc_force_on_gpu(n, m, x, a, pot, eps2);
+
 
   FILE *gp;
   open_window(&gp);
 
-  while(t < t_end){
+  while (t < t_end)
+  {
     /* realtime analysis */
-    if (fmod(t, t_out) == 0.0){
+    if (fmod(t, t_out) == 0.0)
+    {
       rv = calc_r_v(n, m, x, v, eps2);
       printf("%lf %lf\n", t, rv);
     }
@@ -357,8 +368,7 @@ int main(void)
 
     /* visualization of particle data */
     animated_snapshot(n, t, x, &gp);
-
-    }
+  }
   close_window(&gp);
 
   /* integration error check
